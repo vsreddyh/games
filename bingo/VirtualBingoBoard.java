@@ -1,8 +1,7 @@
-package bingo;
 import java.util.*;
 import java.util.stream.*;
 
-public class Bingo {
+public class VirtualBingoBoard {
   static ArrayList<Integer> originalIndexValue =
       new ArrayList<>(IntStream.rangeClosed(1, 25).boxed().toList());
   static ArrayList<Integer> indexPriority =
@@ -10,8 +9,6 @@ public class Bingo {
   static Scanner sc = new Scanner(System.in);
   static boolean showBingo = false;
   static String bingo = "BINGO";
-  static SortedMapByValue<String, Integer> dead = new SortedMapByValue<>();
-  static SortedMapByValue<String, Integer> init = new SortedMapByValue<>();
 
   public static void main(String[] args) {
     indexPriority.set(12, 2);
@@ -23,14 +20,6 @@ public class Bingo {
     indexPriority.set(18, 1);
     indexPriority.set(20, 1);
     indexPriority.set(24, 1);
-    init.put("vertical", 0);
-    init.put("horizantal", 0);
-    init.put("diagonal1", 0);
-    init.put("diagonal2", 0);
-    dead.put("vertical", -1);
-    dead.put("horizantal", -1);
-    dead.put("diagonal1", -1);
-    dead.put("diagonal2", -1);
     startBingo();
     sc.close();
   }
@@ -64,8 +53,8 @@ public class Bingo {
     for (int i = 0; i < 25; i++) {
       valueIndex.put(indexValue.get(i), i);
     }
-    ArrayList<SortedMapByValue<String, Integer>> indexWeight =
-        new ArrayList<>(Collections.nCopies(25, init));
+    ArrayList<Integer> indexWeight =
+        new ArrayList<>(Collections.nCopies(25, 0));
     askShowBingo();
     int count = 0;
     clearScreen();
@@ -77,14 +66,6 @@ public class Bingo {
       } else {
         System.out.println(bingo.substring(0, bingocount));
       }
-      int myChoice = codeTurn(indexWeight, 0);
-      count++;
-      int value = indexValue.get(myChoice);
-      System.out.println("My choice is " + value);
-      if (count >= 17) {
-        askBingo();
-      }
-      checkNumber(myChoice, arrayOfCompleted, indexWeight, indexValue);
       listCompleted(arrayOfCompleted);
       if (showBingo) {
         printGrid(indexValue);
@@ -102,50 +83,29 @@ public class Bingo {
       }
       count++;
       int index = valueIndex.get(num);
-      if (count >= 17) {
-        askBingo();
-      }
-      System.out.println(indexWeight);
-      checkNumber(index, arrayOfCompleted, indexWeight, indexValue);
+      arrayOfCompleted.add(num);
+      indexWeight.set(index, -1);
+      indexValue.set(index, -1);
+      addWeight(indexWeight, index);
+      printGrid(indexWeight);
     }
   }
 
-  public static void
-  checkNumber(int index, HashSet<Integer> arrayOfCompleted,
-              ArrayList<SortedMapByValue<String, Integer>> indexWeight,
-              ArrayList<Integer> indexValue) {
-    int num = indexValue.get(index);
-    arrayOfCompleted.add(num);
-    indexWeight.set(index, dead);
-    indexValue.set(index, -1);
-    addWeight(indexWeight, index);
-  }
-
-  public static int
-  codeTurn(ArrayList<SortedMapByValue<String, Integer>> indexWeight,
-           int level) {
+  public static int codeTurn(ArrayList<Integer> indexWeight) {
     int max = -1;
     int maxindex = 0;
     for (int i = 0; i < indexWeight.size(); i++) {
-      if (max < getNthMax(level, indexWeight.get(i))) {
+      if (max < indexWeight.get(i)) {
         maxindex = i;
-        max = getNthMax(level, indexWeight.get(i));
-      } else if (max == getNthMax(level, indexWeight.get(i))) {
-        if (level < indexWeight.size() - 1) {
-          maxindex = codeTurn(indexWeight, level++);
-          max = getNthMax(level, indexWeight.get(i));
-        } else if (indexPriority.get(maxindex) <= indexPriority.get(i)) {
-          max = getNthMax(level, indexWeight.get(i));
+        max = indexWeight.get(i);
+      } else if (max == indexWeight.get(i)) {
+        if (indexPriority.get(maxindex) <= indexPriority.get(i)) {
+          max = indexWeight.get(i);
           maxindex = i;
         }
       }
     }
     return maxindex;
-  }
-
-  public static int getNthMax(int n,
-                              SortedMapByValue<String, Integer> indexes) {
-    return indexes.getNthValue(n);
   }
 
   public static void newGame() {
@@ -232,44 +192,38 @@ public class Bingo {
     }
   }
 
-  public static void
-  addWeight(ArrayList<SortedMapByValue<String, Integer>> indexWeight,
-            int index) {
+  public static void addWeight(ArrayList<Integer> indexWeight, int index) {
     for (int i = index; i < 25; i = i + 5) {
-      update(indexWeight, i, "vertical");
+      update(indexWeight, i);
     }
     for (int i = index; i > -1; i = i - 5) {
-      update(indexWeight, i, "vertical");
+      update(indexWeight, i);
     }
     for (int i = index + 1; i % 5 != 0; i++) {
-      update(indexWeight, i, "horizantal");
+      update(indexWeight, i);
     }
     for (int i = index - 1; i > -1 && i % 5 != 4; i--) {
-      update(indexWeight, i, "horizantal");
+      update(indexWeight, i);
     }
     if (index == 0 || index == 6 || index == 12 || index == 18 || index == 24) {
-      update(indexWeight, 0, "diagonal1");
-      update(indexWeight, 6, "diagonal1");
-      update(indexWeight, 12, "diagonal1");
-      update(indexWeight, 18, "diagonal1");
-      update(indexWeight, 24, "diagonal1");
+      update(indexWeight, 0);
+      update(indexWeight, 6);
+      update(indexWeight, 12);
+      update(indexWeight, 18);
+      update(indexWeight, 24);
     }
     if (index == 4 || index == 8 || index == 12 || index == 16 || index == 20) {
-      update(indexWeight, 4, "diagonal2");
-      update(indexWeight, 8, "diagonal2");
-      update(indexWeight, 12, "diagonal2");
-      update(indexWeight, 16, "diagonal2");
-      update(indexWeight, 20, "diagonal2");
+      update(indexWeight, 4);
+      update(indexWeight, 8);
+      update(indexWeight, 12);
+      update(indexWeight, 16);
+      update(indexWeight, 20);
     }
   }
 
-  public static void
-  update(ArrayList<SortedMapByValue<String, Integer>> indexWeight, int index,
-         String type) {
-    if (indexWeight.get(index).get(type) != -1) {
-      SortedMapByValue<String, Integer> toChange = indexWeight.get(index);
-      toChange.set(type, toChange.get(type) + 1);
-      indexWeight.set(index, toChange);
+  public static void update(ArrayList<Integer> indexWeight, int index) {
+    if (indexWeight.get(index) != -1) {
+      indexWeight.set(index, indexWeight.get(index) + 1);
     }
   }
 

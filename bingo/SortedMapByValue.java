@@ -1,72 +1,58 @@
-package bingo;
 import java.util.*;
 
-public class SortedMapByValue<K, V extends Comparable<V>> {
-  private final Map<K, V> map =
-      new TreeMap<>(); // Internal TreeMap to store key-value pairs
-  private final Comparator<Map.Entry<K, V>>
-      valueComparator; // Comparator for sorting
-  private Map<K, V> sortedMap =
-      new LinkedHashMap<>(); // Maintains sorted entries
+public class SortedMapByValue{
+  HashMap<String,Integer> UnsortedMap = new HashMap<>();
+  ArrayList<String> SortedKeys = new ArrayList<>();
 
-  // Constructor
-  public SortedMapByValue() {
-    this.valueComparator = (e1, e2) -> {
-      int cmp = e2.getValue().compareTo(e1.getValue()); // Descending order
-      return (cmp == 0)
-          ? e1.getKey().toString().compareTo(e2.getKey().toString())
-          : cmp; // Break ties using keys
-    };
+  public void put(String key, Integer value) {
+    UnsortedMap.put(key, value);
+    SortedKeys.add(key);
+    sort();
   }
 
-  // Put method to add or update key-value pairs
-  public void put(K key, V value) {
-    map.put(key, value);
-    sortMap();
+  public SortedMapByValue(){
+    UnsortedMap = new HashMap<>();
+    SortedKeys = new ArrayList<>();
   }
-
-  // Put method to add or update key-value pairs
-  public void set(K key, V value) {
-    map.put(key, value);
-    sortMap();
+  
+  public SortedMapByValue(SortedMapByValue other){
+    UnsortedMap = new HashMap<>(other.UnsortedMap);
+    SortedKeys = new ArrayList<>(other.SortedKeys);
   }
-
-  // Get method to retrieve value based on key
-  public V get(K key) { return map.get(key); }
-
-  // Remove method to delete a key-value pair
-  public V remove(K key) {
-    V removedValue = map.remove(key);
-    sortMap();
-    return removedValue;
-  }
-
-  public V getNthValue(int n) {
-    if (n < 0 || n >= sortedMap.size()) {
-      throw new IndexOutOfBoundsException("Index " + n + " is out of bounds");
-    }
-    int currentIndex = 0;
-    for (V value : sortedMap.values()) {
-      if (currentIndex == n) {
-        return value;
+  
+  public void sort() {
+    Collections.sort(SortedKeys,new Comparator<String>() {
+      @Override
+      public int compare(String o1, String o2) {
+        return UnsortedMap.get(o2).compareTo(UnsortedMap.get(o1));
       }
-      currentIndex++;
-    }
-    return null; // This should never happen if bounds are checked
+    });
   }
-
-  // Method to retrieve the entire sorted map
-  public Map<K, V> getSortedMap() { return sortedMap; }
-
-  // Internal method to sort the map based on values
-  private void sortMap() {
-    List<Map.Entry<K, V>> entryList = new ArrayList<>(map.entrySet());
-    entryList.sort(valueComparator);
-
-    // Rebuild the sorted LinkedHashMap
-    sortedMap = new LinkedHashMap<>();
-    for (Map.Entry<K, V> entry : entryList) {
-      sortedMap.put(entry.getKey(), entry.getValue());
-    }
+  
+  public void set(String key, Integer value) {
+    UnsortedMap.put(key, value);
+    sort();
+  }
+  
+  public Integer get(String key) {
+    return UnsortedMap.get(key);
+  }
+  public Integer getNthValue(int n){
+    return UnsortedMap.get(SortedKeys.get(n));
+  }
+  public void print(){
+      System.out.println(UnsortedMap);
+  }
+  
+  public static void main(String[] args){
+		SortedMapByValue s = new SortedMapByValue();
+    s.put( "a", 1 );
+    s.put( "b", 2 );
+    s.put( "c", 3 );
+    s.put( "d", 4 );
+    s.print();
+    s.set("b", 15);
+    s.print();
+    System.out.println(s.getNthValue(1));
   }
 }
